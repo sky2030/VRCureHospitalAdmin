@@ -93,7 +93,7 @@ const InsertDoctor = ({ navigation }) => {
       degree,
       designation,
       deptcode,
-      department,
+      // department,
       specialities,
     };
     //console.log(payload);
@@ -197,10 +197,10 @@ const InsertDoctor = ({ navigation }) => {
       });
   };
 
-  const SelectDept = (item) => {
-    setDepartment(item.departmentname);
-    setDeptcode(item.code);
-  };
+  // const SelectDept = (item) => {
+  //   setDepartment(item.departmentname);
+  //   setDeptcode(item.code);
+  // };
 
   useEffect(() => {
     const unsubscribe = navigation.addListener("focus", () => {
@@ -230,7 +230,7 @@ const InsertDoctor = ({ navigation }) => {
       <TouchableOpacity
         activeOpacity={0.95}
         onPress={() => {
-          setDepartment(item.departmentname);
+          // setDepartment(item.departmentname);
           setDeptcode(item.deptcode);
         }}
         style={styles.option}

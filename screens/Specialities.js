@@ -27,46 +27,92 @@ export default function HospitalSpeciality({ navigation }) {
   const [modal, setModal] = useState(false);
   const [picture, setPicture] = useState("");
 
-  const fetchData = () => {
-    fetch(`${BASE_URL}speciality`)
+  const HospitalProfile = async () => {
+    const userToken = await AsyncStorage.getItem("userToken");
+    // console.log(userToken);
+    fetch(BASE_URL, {
+      method: "GET",
+      headers: { Authorization: userToken },
+    })
       .then((res) => res.json())
-      .then((results) => {
-        if (results.code == 200) {
-          setData(results.data);
+      .then((result) => {
+        console.log("Hospital Profile :", JSON.stringify(result));
+        if (result.code == 200) {
+          setData(result.data);
           setLoading(false);
         } else {
-          Alert.alert(Alert_Title, results.message);
-          setLoading(false);
+          Alert.alert(Alert_Title, result.message);
         }
       })
       .catch((err) => {
         Alert.alert(Alert_Title, SOMETHING_WENT_WRONG);
-        setLoading(false);
       });
+    //  console.log(data.hospitalcode)
   };
 
   const submitData = async () => {
-    const userToken = await AsyncStorage.getItem("userToken");
-    const payload = {
-      title,
-      description,
-      picture,
-    };
+    if (title.length <= 0) {
+      Alert.alert(
+        Alert_Title,
+        "Please add Title of Speciality and then try again."
+      );
+      return;
+    }
+    if (picture.length <= 0) {
+      Alert.alert(
+        Alert_Title,
+        "Please add Speciality picture and then try again."
+      );
+      return;
+    }
+    console.log("Picture :", picture);
+    console.log("Title of Speciality :", title);
+    console.log("Description of Speciality :", description);
 
-    console.log(payload);
-    fetch(`${BASE_URL}speciality/add`, {
-      method: "post",
+    const userToken = await AsyncStorage.getItem("userToken");
+
+    const data = new FormData();
+    let extension = picture.split("/");
+    let fileName = extension[extension.length - 1];
+    let pathArray = fileName.split(".");
+    pathArray = pathArray[pathArray.length - 1];
+
+    data.append("picture", {
+      uri: picture,
+      type: `image/${pathArray}`,
+      name: fileName,
+    });
+
+    data.append("title", title);
+    data.append("description", description);
+
+    console.log("Data :", JSON.stringify(data));
+
+    //  fetch(`${BASE_URL}speciality/add`, {
+    //    method: "post",
+    //    headers: {
+    //      "Content-Type": "application/json",
+    //      Authorization: userToken,
+    //    },
+    //    body: JSON.stringify(payload),
+    //  })
+
+    fetch(`${BASE_URL}speciality`, {
+      method: "POST",
       headers: {
-        "Content-Type": "application/json",
         Authorization: userToken,
+        "Content-Type": "multipart/form-data",
       },
-      body: JSON.stringify(payload),
+      body: data,
     })
       .then((res) => res.json())
       .then((data) => {
+        console.log("Add report :", JSON.stringify(data));
         if (data.code == 200) {
-          Alert.alert(`${title} is saved successfully`);
-          navigation.goBack();
+          Alert.alert(Alert_Title, data.message);
+          setspecialityTitle("");
+          setspecialitydescription("");
+          setPicture("");
         } else {
           Alert.alert(Alert_Title, data.message);
         }
@@ -77,7 +123,14 @@ export default function HospitalSpeciality({ navigation }) {
   };
 
   useEffect(() => {
-    //  fetchData();
+    const unsubscribe = navigation.addListener("focus", () => {
+      console.log("Speciality Focused");
+      HospitalProfile();
+      setspecialityTitle("");
+      setspecialitydescription("");
+      setPicture("");
+    });
+    return unsubscribe;
   }, []);
 
   const pickFromGallery = async () => {
@@ -87,13 +140,13 @@ export default function HospitalSpeciality({ navigation }) {
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         //  aspect: [1, 1],
-        quality: 0.5,
+        quality: 0.8,
         base64: true,
       });
       // console.log(data.base64);
       if (!data.cancelled) {
         //  handleUpload(newfile);
-        setPicture(`data:image/jpeg;base64,${data.base64}`);
+        setPicture(data.uri);
       }
     } else {
       Alert.alert("you need to give up permission to work");
@@ -106,13 +159,13 @@ export default function HospitalSpeciality({ navigation }) {
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         //  aspect: [1, 1],
-        quality: 0.5,
+        quality: 0.8,
         base64: true,
       });
       // console.log(data.base64);
       if (!data.cancelled) {
         //  handleUpload(newfile);
-        setPicture(`data:image/jpeg;base64,${data.base64}`);
+        setPicture(data.uri);
       }
     } else {
       Alert.alert("you need to give up permission to work");
@@ -145,16 +198,13 @@ export default function HospitalSpeciality({ navigation }) {
         <View style={styles.imagestyle}>
           <Image
             // source={cardiology}
-            source={{ uri: item.picture }}
+            source={{ uri: BASE + item.picture.url }}
             style={styles.img}
           />
         </View>
         <View style={styles.dept}>
-          <Text style={styles.deptName}>Arthroscopy</Text>
-          <Text style={styles.description}>
-            (ahr-THROS-kuh-pee) is a procedure for diagnosing and treating joint
-            problems.
-          </Text>
+          <Text style={styles.deptName}>{item.title}</Text>
+          <Text style={styles.description}>{item.description}</Text>
         </View>
       </View>
     );
@@ -209,17 +259,25 @@ export default function HospitalSpeciality({ navigation }) {
         >
           save
         </Button>
+
         {/* <FlatList
           data={data}
+          renderItem={(Props) => {
+            return <renderList {...Props} />;
+          }}
+          keyExtractor={extractKey}
+          onRefresh={() => HospitalProfile()}
+          refreshing={loading}
+        /> */}
+        <FlatList
+          data={data.specialities}
           renderItem={({ item }) => {
             return renderList(item);
           }}
-          keyExtractor={(item) => item._id}
-          onRefresh={() => fetchData()}
-          refreshing={loading}
-        /> */}
+          keyExtractor={(item) => item.id}
+        />
 
-        <View style={styles.card}>
+        {/* <View style={styles.card}>
           <View style={styles.imagestyle}>
             <Image
               // source={cardiology}
@@ -251,7 +309,7 @@ export default function HospitalSpeciality({ navigation }) {
               involve artificially.
             </Text>
           </View>
-        </View>
+        </View> */}
 
         {/* <View>
                 <Image source={{ uri: picture }} style={styles.thumbnail} />

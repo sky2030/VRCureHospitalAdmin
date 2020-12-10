@@ -47,9 +47,6 @@ const ProfileScreen = ({ navigation }) => {
       });
     //  console.log(data.hospitalcode)
   };
-  const updateSpeciality = () => {
-    Alert.alert("Specialities Updated Successfully");
-  };
 
   useEffect(() => {
     const unsubscribe = navigation.addListener("focus", () => {

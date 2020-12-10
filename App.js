@@ -72,7 +72,9 @@ export default function App() {
     () => ({
       signIn: (username, password) => {
         // setIsLoading(false);
-        fetch(`${BASE_URL}login`, {
+        let URL = `${BASE_URL}login`
+        console.log(URL)
+        fetch(URL, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -148,8 +150,8 @@ export default function App() {
         {loginState.userToken !== null ? (
           <DrawerStackScreen />
         ) : (
-          <RootStackScreen />
-        )}
+            <RootStackScreen />
+          )}
       </NavigationContainer>
       {/* </Provider> */}
     </AuthContext.Provider>
